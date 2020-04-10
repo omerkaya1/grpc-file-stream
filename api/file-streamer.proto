@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package fs;
+option go_package = "api";
+
+message Request {
+	// The name of the resource to read.
+	string resource_name = 1;
+
+	// The offset for the first byte to return in the read, relative to the start
+	// of the resource.
+	//
+	// A `read_offset` that is negative or greater than the size of the resource
+	// will cause an `OUT_OF_RANGE` error.
+	int64 read_offset = 2;
+
+	// The maximum number of `data` bytes the server is allowed to return in the
+	// sum of all `ReadResponse` messages. A `read_limit` of zero indicates that
+	// there is no limit, and a negative `read_limit` will cause an error.
+	//
+	// If the stream returns fewer bytes than allowed by the `read_limit` and no
+	// error occurred, the stream includes all data from the `read_offset` to the
+	// end of the resource.
+	int64 read_limit = 3;
+
+	// A portion of the data for the resource. The client **may** leave `data`
+	// empty for any given `WriteRequest`. This enables the client to inform the
+	// service that the request is still live while it is running an operation to
+	// generate more data.
+	bytes content = 10;
+}
+
+enum Status {
+	OK = 0;
+	FAILURE = 1;
+	UNKNOWN = 2;
+}
+
+message Response {
+	string Message = 1;
+	Status Code = 2;
+}
+
+service FileStreamerService {
+	rpc StoreFile(stream Request) returns (Response);
+}
